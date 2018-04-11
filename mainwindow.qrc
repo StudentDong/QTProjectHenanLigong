@@ -1,0 +1,34 @@
+<RCC>
+  <qresource prefix="MainWindow">
+    <file>Resources/fushi.png</file>
+    <file>Resources/zhengshi.png</file>
+    <file>Resources/20180408201117.jpg</file>
+    <file>Resources/zuoshi.png</file>
+    <file>Resources/open.ico</file>
+    <file>Resources/111.ico</file>
+    <file>Resources/Black.jpg</file>
+    <file>Resources/Blue.png</file>
+    <file>Resources/clear.png</file>
+    <file>Resources/close.ico</file>
+    <file>Resources/Coordinate.jpg</file>
+    <file>Resources/find.ico</file>
+    <file>Resources/Green.png</file>
+    <file>Resources/hpu.ico</file>
+    <file>Resources/Initialize.bmp</file>
+    <file>Resources/Initialize.jpg</file>
+    <file>Resources/initialize4.png</file>
+    <file>Resources/new.ico</file>
+    <file>Resources/open.ico</file>
+    <file>Resources/Red.png</file>
+    <file>Resources/save.ico</file>
+    <file>Resources/saveas.ico</file>
+    <file>Resources/undo.ico</file>
+    <file>Resources/White.jpg</file>
+    <file>Resources/点减小.png</file>
+    <file>Resources/点增大.png</file>
+    <file>Resources/高度渲染.png</file>
+    <file>Resources/强度渲染.png</file>
+    <file>Resources/图标.dwg</file>
+  </qresource>
+  <qresource/>
+</RCC>
