@@ -1,10 +1,11 @@
 #include "mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
-#include<QColorDialog>
+#include <QColorDialog>
 #include <File.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/common/common.h>
+
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -60,6 +61,7 @@ void MainWindow::connectButtonSlots()
 	connect(tree->m_tree, SIGNAL(itemClicked(QTreeWidgetItem*, int)), this, SLOT(itemSelected(QTreeWidgetItem*, int)));
 	
 	connect(tree->m_tree, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(treeItemChanged(QTreeWidgetItem*, int)));
+	
 	connect(tree->m_tree, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(popMenu(const QPoint&)));
 }
 
@@ -72,7 +74,6 @@ void MainWindow::creatdockwindow()
 	//文件树窗体
 	
 
-	
 	std::string std_str("DB Tree");
 	QString q_str = QString::fromStdString(std_str);
 	QDockWidget*DB_Tree = new QDockWidget(q_str);
@@ -246,6 +247,7 @@ void MainWindow::onOpen()
 		}
 	this->setWindowTitle("Point Cloud Process System--" + FilePathName.at(0));//更新程序标题
 	tree->creattree(fileName);
+	
 	}
 
 
@@ -784,11 +786,11 @@ void MainWindow::itemSelected(QTreeWidgetItem* item, int count)
 {
 	
 	count = MainWindow::tree->m_tree->indexOfTopLevelItem(item);  //获取item的行号
-	for (int i = 0; i != MainWindow::cloud.size(); i++)
-	{
-		view->viewer->updatePointCloud(MainWindow::cloud[i], std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
-		view->viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
-	}
+	//for (int i = 0; i != MainWindow::cloud.size(); i++)
+	//{
+	//	view->viewer->updatePointCloud(MainWindow::cloud[i], std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
+	//	view->viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
+	//}
 	//提取当前点云的RGB,点云数量等信息
 	int cloud_size = MainWindow::cloud[count]->points.size();
 	unsigned int cloud_r = MainWindow::cloud[count]->points[0].r;
@@ -858,5 +860,98 @@ void MainWindow::popMenu(const QPoint&)
 	QTreeWidgetItem* curItem = tree->m_tree->currentItem();
 	if (NULL == curItem) return;
 	//QString name = curItem->text(0);
-	int id =
+	int id = tree->m_tree->indexOfTopLevelItem(curItem);
+	QAction deleteItemAction("Delete", this);
+	QAction changeColorAction("Change color", this);
+	connect(&changeColorAction, &QAction::triggered, this, &MainWindow::ChangeColour);
+	connect(&deleteItemAction, &QAction::triggered, this, &MainWindow::deleteItem);
+	QMenu menu(tree->m_tree);
+	menu.addAction(&deleteItemAction);
+	menu.addAction(&changeColorAction);
+	menu.exec(QCursor::pos()); //在当前鼠标位置显示
+	
+
 }
+void MainWindow::deleteItem()
+{
+	QList<QTreeWidgetItem*> itemList = tree->m_tree->selectedItems();
+	// ui.dataTree->selectedItems().size() 随着迭代次数而改变，因此循环条件要设置为固定大小的 selected_item_count
+	int selected_item_count = tree->m_tree->selectedItems().size();
+	for (int i = 0; i != selected_item_count; i++){
+		//QTreeWidgetItem* curItem = ui.dataTree->currentItem();
+		//QMessageBox::information(this, "itemList's size", QString::number(ui.dataTree->selectedItems().size()));
+		QTreeWidgetItem* curItem = itemList[i];
+		QString name = curItem->text(0);
+		int id = tree->m_tree->indexOfTopLevelItem(curItem);
+		//QMessageBox::information(this, "information", "curItem: " + name + " " + QString::number(id));
+		auto it = cloud.begin() + tree->m_tree->indexOfTopLevelItem(curItem);//for (auto i = vs.begin(); i != vs.end(); i++)
+	
+		// 删除点云之前，将其点的数目保存
+		//int delete_points = it->;
+		it = cloud.erase(it);
+		//QMessageBox::information(this, "information", QString::number(delete_points) + " " + QString::number(mycloud_vec.size()));
+		tree->m_tree->takeTopLevelItem(tree->m_tree->indexOfTopLevelItem(curItem));
+	}
+
+	// 移除之后再添加，避免 id 和资源管理树行号不一致的情况
+	view->viewer->removeAllPointClouds();
+	for (int i = 0; i != cloud.size(); i++)
+	{
+		view->viewer->addPointCloud(cloud[i], std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
+		view->viewer->updatePointCloud(cloud[i], std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
+	}
+	view->update();
+}
+
+void MainWindow::ChangeColour()
+{
+	QColor color = QColorDialog::getColor(Qt::white, this, "Select color for point cloud");
+	if (color.isValid())
+	{
+		QList<QTreeWidgetItem*> itemList = tree->m_tree->selectedItems();
+		int selected_item_count = tree->m_tree->selectedItems().size();
+		if (0 == selected_item_count)
+		{
+			for (int i = 0; i != cloud.size(); i++)
+			{
+				for (int j = 0; j != cloud[i]->points.size(); j++)
+				{
+					cloud[i]->points[j].r = color.red();
+					cloud[i]->points[j].g = color.green();
+					cloud[i]->points[j].b = color.blue();
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i != selected_item_count; i++)
+			{
+				int cloud_id = tree->m_tree->indexOfTopLevelItem(itemList[i]);
+				for (int j = 0; j != cloud[cloud_id]->size(); j++)
+				{
+					cloud[cloud_id]->points[j].r = color.red();
+					cloud[cloud_id]->points[j].g = color.green();
+					cloud[cloud_id]->points[j].b = color.blue();
+				}
+				//view->viewer->addPointCloud(cloud[cloud_id], std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
+			}
+		}
+		
+
+	}
+	for (unsigned i = 0; i < cloud.size(); ++i)
+	{
+		view->viewer->updatePointCloud(cloud[i],
+			std::string((const char*)fileName.at(i).toLocal8Bit()).c_str());
+	}
+	view->update();
+
+}
+
+
+
+	
+	
+
+
+

@@ -88,6 +88,8 @@ private:
 	void itemSelected(QTreeWidgetItem* item, int count);
 	void treeItemChanged(QTreeWidgetItem* item, int);
 	void popMenu(const QPoint&);
+	void deleteItem();
+	void ChangeColour();
 };
 
 #endif // MAINWINDOW_H
